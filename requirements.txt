@@ -1,0 +1,13 @@
+langchain
+langchain-core
+langchain-openai
+langchain-community
+pydantic
+python-dotenv
+mysql-connector-python
+fastapi
+aiomysql
+uvicorn
+bs4
+pytz
+asyncmy
