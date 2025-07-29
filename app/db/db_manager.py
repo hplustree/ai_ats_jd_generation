@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 
 from datetime import datetime
 import pytz
+from typing import Optional
 
 from app.db.database import AsyncSessionLocal, engine
 from app.db.models import Base, JobDescription
@@ -61,10 +62,10 @@ class DatabaseManager:
         qualification: str,
         technical_skills: List[str],
         work_preference: List[int],
-        sector: int,
-        big4_experience: int,
-        travel_required: int,
-        software: List[str],
+        sector: Optional[int],
+        big4_experience: Optional[int],
+        travel_required: Optional[int],
+        software: Optional[List[str]],
         ai_jd_description: dict
     ) -> None:
         async with AsyncSessionLocal() as session:

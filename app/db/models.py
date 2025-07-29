@@ -124,7 +124,7 @@ class JobDescription(Base):
 
     sector = Column(
         Integer,
-        nullable=False,
+        nullable=True,
         index=True,
         doc="Employment sector: 1=Public, 2=Private, 3=Both.",
         comment="1=Public, 2=Private, 3=Both"
@@ -160,7 +160,7 @@ class JobDescription(Base):
 
     software = Column(
         Text,
-        nullable=False,
+        nullable=True,
         doc="List of software tools used in the job."
     )
 

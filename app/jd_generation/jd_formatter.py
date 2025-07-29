@@ -45,10 +45,10 @@ async def format_job_input_data(data: JobDescriptionInput) -> Dict[str, Any]:
         max_exp = convert_experience(data.max_experience)
 
         key_skills = ", ".join(data.technical_skills)
-        software_tools = ", ".join(data.software)
+        software_tools = ", ".join(data.software) if data.software else None
 
-        availability_options = [AVAILABILITY_MAP.get(val, "Unknown") for val in data.availability]
-        work_preferences = [WORK_PREFERENCE_MAP.get(val, "Unknown") for val in data.work_preference]
+        availability_options = [AVAILABILITY_MAP.get(val, "Not provided") for val in data.availability]
+        work_preferences = [WORK_PREFERENCE_MAP.get(val, "Not provided") for val in data.work_preference]
 
         return {
             "job_id": data.job_id,
@@ -62,9 +62,9 @@ async def format_job_input_data(data: JobDescriptionInput) -> Dict[str, Any]:
             "work_preference": work_preferences,
             "availability": availability_options,
             "qualification": data.qualification,
-            "sector": SECTOR_MAP.get(data.sector, "Unknown"),
-            "big4_experience": BIG4_MAP.get(data.big4_experience, "Unknown"),
-            "travel_required": TRAVEL_REQUIRED_MAP.get(data.travel_required, "Unknown"),
+            "sector": SECTOR_MAP.get(data.sector, "Not provided"),
+            "big4_experience": BIG4_MAP.get(data.big4_experience, "Not provided"),
+            "travel_required": TRAVEL_REQUIRED_MAP.get(data.travel_required, "Not provided"),
             "key_skills": key_skills,
             "software_tools": software_tools
         }

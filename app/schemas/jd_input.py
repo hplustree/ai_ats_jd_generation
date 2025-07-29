@@ -67,12 +67,13 @@ class JobDescriptionInput(BaseModel):
         description="List of preferred work modes: 1=Remote, 2=WFO, 3=Hybrid"
     )
 
-    sector: Literal[1, 2, 3] = Field(
+    sector: Optional[Literal[1, 2, 3]] = Field(
+        default=None,
         description="Employment sector: 1=Public, 2=Private, 3=Both"
     )
 
-    software: List[str] = Field(
-        min_items=1,
+    software: Optional[List[str]] = Field(
+        default=None,
         description="List of required software tools"
     )
 
