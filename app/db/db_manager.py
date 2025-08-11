@@ -34,18 +34,17 @@ class DatabaseManager:
             await conn.run_sync(Base.metadata.create_all)
         logger.info("All tables verified/created.")
 
-    async def check_job_exists(self, job_id: int, user_id: str) -> bool:
+    async def check_job_exists(self, job_id: int) -> bool:
         """
         Check if job_id and user_id combination already exists in JobDescription table.
         """
         async with AsyncSessionLocal() as session:
             stmt = select(JobDescription.job_id).where(
-                JobDescription.job_id == job_id,
-                JobDescription.user_id == user_id
+                JobDescription.job_id == job_id
             )
             result = await session.execute(stmt)
             exists = result.scalar() is not None
-            logger.debug(f"Checked job_id {job_id} with user_id {user_id}: exists={exists}")
+            logger.debug(f"Checked job_id {job_id} with : exists={exists}")
             return exists
 
     async def insert_job_description(
@@ -57,8 +56,8 @@ class DatabaseManager:
         max_exp: str,
         availability: List[int],
         number_of_positions: int,
-        location: str,
-        domain: str,
+        # location: str,
+        # domain: str,
         qualification: str,
         technical_skills: List[str],
         work_preference: List[int],
@@ -78,8 +77,8 @@ class DatabaseManager:
                     max_exp=max_exp,
                     availability=json.dumps(availability),
                     number_of_positions=number_of_positions,
-                    location=location,
-                    domain=domain,
+                    # location=location,
+                    # domain=domain,
                     qualification=qualification,
                     technical_skills=json.dumps(technical_skills) if technical_skills else None,
                     work_preference=json.dumps(work_preference),

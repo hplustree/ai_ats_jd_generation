@@ -9,7 +9,7 @@ from app.schemas.jd_input import JobDescriptionInput
 from app.schemas.jd_output import JobDescriptionOutput
 from app.jd_generation.jd_generator import JobDescriptionGenerator
 from app.db.db_manager import DatabaseManager
-
+from fastapi.responses import JSONResponse
 from app.core.logger import logger
 
 
@@ -62,12 +62,11 @@ async def generate_job_description_endpoint(input_data: JobDescriptionInput) -> 
         # Check if store_db is True and validate existing records
         if input_data.store_db:
             job_id = input_data.job_id
-            user_id = input_data.user_id
-            
-            if await db.check_job_exists(job_id, user_id):
+
+            if await db.check_job_exists(job_id):
                 raise HTTPException(
                     status_code=409, 
-                    detail=f"JD is already generated for job id {job_id} and user id {user_id}."
+                    detail=f"JD is already generated for job id {job_id} ."
                 )
 
         # Generate JD
@@ -92,8 +91,8 @@ async def generate_job_description_endpoint(input_data: JobDescriptionInput) -> 
                     max_exp=str(input_data.max_experience),
                     availability=input_data.availability,
                     number_of_positions=input_data.number_of_positions,
-                    location=input_data.location,
-                    domain=input_data.domain,
+                    # location=input_data.location,
+                    # domain=input_data.domain,
                     qualification=input_data.qualification,
                     technical_skills=input_data.technical_skills,
                     work_preference=input_data.work_preference,
@@ -105,9 +104,15 @@ async def generate_job_description_endpoint(input_data: JobDescriptionInput) -> 
                 )
             except RuntimeError as insert_err:
                 logger.warning(f"DB insert failed for job id {input_data.job_id}: {insert_err}")
+        # Return the modified output format
+        response = {
+            "job_id": input_data.job_id,
+            "user_id": input_data.user_id,
+            "job_description": result.model_dump()
+        }
 
         logger.info(f"Successfully processed.")
-        return result
+        return JSONResponse(content=response)
 
     except ValidationError as ve:
         logger.error(f"Validation error: {ve.errors()}")

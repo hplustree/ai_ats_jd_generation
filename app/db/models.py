@@ -1,6 +1,6 @@
-from sqlalchemy import Column, String, Integer, SmallInteger, Float, TIMESTAMP, Text, func
 from app.db.database import Base
 from app.core.config import DB_JD_TABLE_NAME
+from sqlalchemy import Column, String, Integer, SmallInteger, TIMESTAMP, Text, func, ForeignKey, BigInteger
 
 
 class JobDescription(Base):
@@ -9,40 +9,31 @@ class JobDescription(Base):
     # Composite primary key columns
     job_id = Column(
         Integer,
-        primary_key=True,  # Part of composite primary key
+        primary_key=True,
+        autoincrement=True,
+        unique=True,
         index=True,
-        nullable=False,
-        doc="Unique job identifier."
+        nullable=False
     )
 
     user_id = Column(
         Integer,
-        primary_key=True,  # Part of composite primary key
+        # ForeignKey("users.id"),
         nullable=False,
         index=True,
         doc="User identifier."
     )
 
     domain_id = Column(
-        Integer,
+        BigInteger,
+        # ForeignKey("domains.id"),
         index=True
-    )
-    level_id = Column(
-        Integer,
-        index=True,
-        doc="Related to tag."
     )
 
     designation = Column(
         String(255),
         nullable=False,
         doc="Job title or designation."
-    )
-
-    domain = Column(
-        String(255),
-        nullable=False,
-        doc="Domain or industry the job belongs to."
     )
 
     min_exp = Column(
@@ -71,12 +62,6 @@ class JobDescription(Base):
         doc="Number of job openings."
     )
 
-    location = Column(
-        String(255),
-        nullable=False,
-        doc="Primary job location."
-    )
-
     qualification = Column(
         String(255),
         doc="Minimum required educational qualification."
@@ -88,22 +73,22 @@ class JobDescription(Base):
         doc="List of technical skills required."
     )
 
-    #New
     job_location_city_id = Column(
         Integer,
+        # ForeignKey("cities.id"),
         index=True
     )
 
     job_location_state_id = Column(
         Integer,
-        index=True,
-        doc="Related to state."
+        # ForeignKey("states.id"),
+        index=True
     )
 
     job_location_country_id = Column(
         Integer,
-        index=True,
-        doc="Related to country."
+        # ForeignKey("countries.id"),
+        index=True
     )
 
     work_preference = Column(
@@ -113,18 +98,9 @@ class JobDescription(Base):
         comment="1=Remote, 2=WFO, 3=Hybrid"
     )
 
-    job_duration = Column(
-        Float,
-        nullable=True
-    )
-
-    type_of_industries = Column(
-        String(255)
-    )
-
     sector = Column(
         Integer,
-        nullable=True,
+        nullable=False,
         index=True,
         doc="Employment sector: 1=Public, 2=Private, 3=Both.",
         comment="1=Public, 2=Private, 3=Both"
@@ -143,16 +119,14 @@ class JobDescription(Base):
         index=True
     )
 
-    compansation_type = Column(
+    compensation_type = Column(
         SmallInteger,
         index=True,
-        nullable=True,
         comment="1=Hourly, 2=Yearly"
     )
 
     travel_required = Column(
         Integer,
-        nullable=True,
         index=True,
         doc="Travel requirement: 1=No, 2=Occasional, 3=Frequent.",
         comment="1=No, 2=Occasional, 3=Frequent"
@@ -160,25 +134,25 @@ class JobDescription(Base):
 
     software = Column(
         Text,
-        nullable=True,
+        nullable=False,
         doc="List of software tools used in the job."
     )
 
     ai_jd_description = Column(
         Text,
-        nullable=True,
         doc="Generated job description from AI."
     )
 
     status = Column(
         SmallInteger,
-        nullable=True,
         index=True,
         comment="1=Open, 2=Closed"
     )
 
     created_by = Column(
-        Integer
+        Integer,
+        # ForeignKey("users.id"),
+        index=True
     )
 
     created_at = Column(
