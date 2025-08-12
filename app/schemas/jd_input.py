@@ -97,8 +97,6 @@ class JobDescriptionInput(BaseModel):
     def validate_store_db_requirements(self):
         """Ensure job_id and user_id are present if store_db is True"""
         if self.store_db:
-            if self.job_id is None:
-                raise ValueError("job_id is required when store_db is True.")
             if self.user_id is None:
                 raise ValueError("user_id is required when store_db is True.")
         return self

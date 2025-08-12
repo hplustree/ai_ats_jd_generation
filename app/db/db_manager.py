@@ -8,9 +8,9 @@ from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 import pytz
 from typing import Optional
-
+from app.db.models import Domain 
 from app.db.database import AsyncSessionLocal, engine
-from app.db.models import Base, JobDescription
+from app.db.models import Base, JobDescription ,User
 
 from app.core.logger import logger
 
@@ -34,30 +34,45 @@ class DatabaseManager:
             await conn.run_sync(Base.metadata.create_all)
         logger.info("All tables verified/created.")
 
-    async def check_job_exists(self, job_id: int) -> bool:
+
+    async def check_users_exists(self, user_id: int) -> bool:
         """
-        Check if job_id and user_id combination already exists in JobDescription table.
+        Check if user_id exists in JobDescription table.
         """
         async with AsyncSessionLocal() as session:
-            stmt = select(JobDescription.job_id).where(
-                JobDescription.job_id == job_id
+            stmt = select(User.id).where(
+                User.id == user_id
             )
             result = await session.execute(stmt)
             exists = result.scalar() is not None
-            logger.debug(f"Checked job_id {job_id} with : exists={exists}")
+            logger.debug(f"Checked user_id {user_id}: exists={exists}")
+            return exists
+
+    async def check_job_exists(self, external_job_id: int, user_id: int) -> bool:
+        """
+        Check if external_job_id and user_id combination already exists in JobDescription table.
+        """
+        async with AsyncSessionLocal() as session:
+            stmt = select(JobDescription.external_job_id).where(
+                JobDescription.external_job_id == external_job_id,
+                JobDescription.user_id == user_id
+            )
+            result = await session.execute(stmt)
+            exists = result.scalar() is not None
+            logger.debug(f"Checked external_job_id {external_job_id} with user_id {user_id}: exists={exists}")
             return exists
 
     async def insert_job_description(
         self,
-        job_id: int,
-        user_id: str,
+        external_job_id: int,
+        user_id: int,
+        domain_id: int, 
         designation: str,
         min_exp: str,
         max_exp: str,
         availability: List[int],
         number_of_positions: int,
         # location: str,
-        # domain: str,
         qualification: str,
         technical_skills: List[str],
         work_preference: List[int],
@@ -66,19 +81,19 @@ class DatabaseManager:
         travel_required: Optional[int],
         software: Optional[List[str]],
         ai_jd_description: dict
-    ) -> None:
+    ) -> int: 
         async with AsyncSessionLocal() as session:
             try:
                 record = JobDescription(
-                    job_id=job_id,
+                    external_job_id=external_job_id, 
                     user_id=user_id,
+                    domain_id=domain_id,  
                     designation=designation,
                     min_exp=min_exp,
                     max_exp=max_exp,
                     availability=json.dumps(availability),
                     number_of_positions=number_of_positions,
                     # location=location,
-                    # domain=domain,
                     qualification=qualification,
                     technical_skills=json.dumps(technical_skills) if technical_skills else None,
                     work_preference=json.dumps(work_preference),
@@ -90,14 +105,52 @@ class DatabaseManager:
                 )
                 session.add(record)
                 await session.commit()
-                logger.info(f"Job description successfully inserted for job_id {job_id} and user_id {user_id}")
+                await session.refresh(record) 
+                
+                logger.info(f"Job description successfully inserted for external_job_id {external_job_id} and user_id {user_id}, got ID {record.id}")
+                return record.id  
 
             except IntegrityError as ie:
                 await session.rollback()
-                logger.error(f"IntegrityError while inserting job_id {job_id}: {ie}", exc_info=True)
+                logger.error(f"IntegrityError while inserting external_job_id {external_job_id}: {ie}", exc_info=True)
                 raise RuntimeError("Integrity error during insertion.") from ie
             
             except Exception as e:
                 await session.rollback()
-                logger.error(f"Unexpected error while inserting job_id {job_id}: {e}", exc_info=True)
+                logger.error(f"Unexpected error while inserting external_job_id {external_job_id}: {e}", exc_info=True)
                 raise RuntimeError("Unexpected error during insertion.") from e
+            
+    
+    async def get_or_create_domain(self, domain_name: str) -> int:
+        """
+        Get domain_id by name, or create if doesn't exist.
+        Returns the domain_id.
+        """
+        async with AsyncSessionLocal() as session:
+            try:
+                # First, try to find existing domain
+                stmt = select(Domain.id).where(Domain.name == domain_name)
+                result = await session.execute(stmt)
+                domain_id = result.scalar()
+                
+                if domain_id:
+                    logger.debug(f"Found existing domain '{domain_name}' with id {domain_id}")
+                    return domain_id
+                
+                # Domain doesn't exist, create new one
+                new_domain = Domain(
+                    name=domain_name,
+                    status=1,  # Active
+                    total_used=0
+                )
+                session.add(new_domain)
+                await session.commit()
+                await session.refresh(new_domain)
+                
+                logger.info(f"Created new domain '{domain_name}' with id {new_domain.id}")
+                return new_domain.id
+                
+            except Exception as e:
+                await session.rollback()
+                logger.error(f"Error handling domain '{domain_name}': {e}", exc_info=True)
+                raise RuntimeError(f"Error handling domain: {e}") from e

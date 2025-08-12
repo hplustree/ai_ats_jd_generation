@@ -32,11 +32,9 @@ async def lifespan(app: FastAPI):
     # Shutdown
     logger.info("Application shutdown initiated.")
 
+
 # Create FastAPI app with lifespan
-app = FastAPI(
-    title="AI Job Description Generator API",
-    lifespan=lifespan
-)
+app = FastAPI(title="AI Job Description Generator API", lifespan=lifespan)
 
 
 # Allow CORS for all origins
@@ -50,7 +48,9 @@ app.add_middleware(
 
 
 @app.post("/generate-job-description/", response_model=JobDescriptionOutput)
-async def generate_job_description_endpoint(input_data: JobDescriptionInput) -> JobDescriptionOutput:
+async def generate_job_description_endpoint(
+    input_data: JobDescriptionInput,
+) -> JobDescriptionOutput:
     """
     Generate an AI-powered job description from structured input.
     """
@@ -59,14 +59,29 @@ async def generate_job_description_endpoint(input_data: JobDescriptionInput) -> 
     logger.info(f"Received job description generation request")
 
     try:
-        # Check if store_db is True and validate existing records
-        if input_data.store_db:
-            job_id = input_data.job_id
+        # First check: Ensure user_id is present and not None/empty
+        if not hasattr(input_data, 'user_id') or input_data.user_id is None or input_data.user_id == "":
+            raise HTTPException(
+                status_code=400,
+                detail="user_id is required and cannot be empty."
+            )
 
-            if await db.check_job_exists(job_id):
+        # Second check: Validate that user exists in database
+        if not await db.check_users_exists(input_data.user_id):
+            raise HTTPException(
+                status_code=401,
+                detail=f"The user with ID {input_data.user_id} is not registered.",
+            )
+
+        # Additional validation for store_db=True
+        if input_data.store_db:
+            external_job_id = input_data.job_id
+            user_id = input_data.user_id
+
+            if await db.check_job_exists(external_job_id, user_id):
                 raise HTTPException(
-                    status_code=409, 
-                    detail=f"JD is already generated for job id {job_id} ."
+                    status_code=409,
+                    detail=f"JD is already generated for external job id {external_job_id} and user id {user_id}.",
                 )
 
         # Generate JD
@@ -77,22 +92,26 @@ async def generate_job_description_endpoint(input_data: JobDescriptionInput) -> 
             logger.error(f"LLM error: {result['error']}")
             raise HTTPException(status_code=400, detail=result["error"])
 
-        # Store in database if store_db is True
+        # Handle response based on store_db flag
         if input_data.store_db:
+            # For store_db=True: Store in DB and return job_id, user_id, job_description
             try:
+                # Get or create domain
+                domain_id = await db.get_or_create_domain(input_data.domain)
+
                 # Convert the Pydantic model to dict for JSON storage
                 ai_jd_dict = result.model_dump()
 
-                await db.insert_job_description(
-                    job_id=input_data.job_id,
+                job_description_id = await db.insert_job_description(
+                    external_job_id=input_data.job_id,
                     user_id=input_data.user_id,
+                    domain_id=domain_id,
                     designation=input_data.designation,
                     min_exp=str(input_data.min_experience),
                     max_exp=str(input_data.max_experience),
                     availability=input_data.availability,
                     number_of_positions=input_data.number_of_positions,
                     # location=input_data.location,
-                    # domain=input_data.domain,
                     qualification=input_data.qualification,
                     technical_skills=input_data.technical_skills,
                     work_preference=input_data.work_preference,
@@ -100,32 +119,45 @@ async def generate_job_description_endpoint(input_data: JobDescriptionInput) -> 
                     big4_experience=input_data.big4_experience,
                     travel_required=input_data.travel_required,
                     software=input_data.software,
-                    ai_jd_description=ai_jd_dict
+                    ai_jd_description=ai_jd_dict,
                 )
+
+                # Return response for store_db=True
+                response = {
+                    "job_id": job_description_id,  # auto incremented job_id
+                    "user_id": input_data.user_id,
+                    "job_description": result.model_dump()
+                }
+
             except RuntimeError as insert_err:
-                logger.warning(f"DB insert failed for job id {input_data.job_id}: {insert_err}")
-        # Return the modified output format
-        response = {
-            "job_id": input_data.job_id,
-            "user_id": input_data.user_id,
-            "job_description": result.model_dump()
-        }
+                logger.error(f"DB insert failed for external job id {input_data.job_id}: {insert_err}")
+                raise HTTPException(status_code=500, detail="Database insertion failed")
+
+        else:
+            # For store_db=False: Return user_id and job_description
+            response = {
+                
+                "job_description": result.model_dump()
+            }
 
         logger.info(f"Successfully processed.")
         return JSONResponse(content=response)
+    except HTTPException as http_ex:
+        logger.error(f"HTTP error: {http_ex.detail}")
+        raise
 
     except ValidationError as ve:
         logger.error(f"Validation error: {ve.errors()}")
         raise HTTPException(status_code=422, detail=ve.errors())
-    
+
     except RuntimeError as re:
         logger.error(f"Runtime error: {re}")
         raise HTTPException(status_code=400, detail=str(re))
-    
+
     except Exception as e:
         logger.error(f"Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
+    
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
