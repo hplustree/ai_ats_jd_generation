@@ -59,30 +59,29 @@ async def generate_job_description_endpoint(
     logger.info(f"Received job description generation request")
 
     try:
-        # First check: Ensure user_id is present and not None/empty
-        if not hasattr(input_data, 'user_id') or input_data.user_id is None or input_data.user_id == "":
-            raise HTTPException(
-                status_code=400,
-                detail="user_id is required and cannot be empty."
-            )
-
-        # Second check: Validate that user exists in database
-        if not await db.check_users_exists(input_data.user_id):
-            raise HTTPException(
-                status_code=401,
-                detail=f"The user with ID {input_data.user_id} is not registered.",
-            )
-
-        # Additional validation for store_db=True
+        # Validation logic based on store_db flag
         if input_data.store_db:
-            external_job_id = input_data.job_id
-            user_id = input_data.user_id
-
-            if await db.check_job_exists(external_job_id, user_id):
+            if not await db.check_users_exists(input_data.user_id):
                 raise HTTPException(
-                    status_code=409,
-                    detail=f"JD is already generated for external job id {external_job_id} and user id {user_id}.",
+                    status_code=401,
+                    detail=f"The user with ID {input_data.user_id} is not registered.",
                 )
+            
+            # Check if job already exists (only if job_id is provided)
+            if input_data.job_id is not None:
+                if await db.check_job_exists(input_data.job_id, input_data.user_id):
+                    raise HTTPException(
+                        status_code=409,
+                        detail=f"JD is already generated for external job id {input_data.job_id} and user id {input_data.user_id}.",
+                    )
+        else:
+            # For store_db=False: user_id is optional, but if provided, validate it exists
+            if input_data.user_id is not None:
+                if not await db.check_users_exists(input_data.user_id):
+                    raise HTTPException(
+                        status_code=401,
+                        detail=f"The user with ID {input_data.user_id} is not registered.",
+                    )
 
         # Generate JD
         result = await jd_generator.generate_job_description_async(input_dict)
@@ -130,18 +129,22 @@ async def generate_job_description_endpoint(
                 }
 
             except RuntimeError as insert_err:
-                logger.error(f"DB insert failed for external job id {input_data.job_id}: {insert_err}")
+                logger.error(f"DB insert failed for external job id {input_data.job_id if input_data.job_id else 'None'}: {insert_err}")
                 raise HTTPException(status_code=500, detail="Database insertion failed")
 
         else:
-            # For store_db=False: Return user_id and job_description
+            # For store_db=False: Return job_description and optionally user_id if provided
             response = {
-                
                 "job_description": result.model_dump()
             }
+            
+            # Include user_id in response only if it was provided in the input
+            if input_data.user_id is not None:
+                response["user_id"] = input_data.user_id
 
         logger.info(f"Successfully processed.")
         return JSONResponse(content=response)
+        
     except HTTPException as http_ex:
         logger.error(f"HTTP error: {http_ex.detail}")
         raise
