@@ -3,7 +3,6 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import ValidationError
 import uvicorn
-import logging
 
 from app.schemas.jd_input import JobDescriptionInput
 from app.schemas.jd_output import JobDescriptionOutput
@@ -137,10 +136,6 @@ async def generate_job_description_endpoint(
             response = {
                 "job_description": result.model_dump()
             }
-            
-            # Include user_id in response only if it was provided in the input
-            if input_data.user_id is not None:
-                response["user_id"] = input_data.user_id
 
         logger.info(f"Successfully processed.")
         return JSONResponse(content=response)
