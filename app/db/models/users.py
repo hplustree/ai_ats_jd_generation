@@ -107,6 +107,6 @@ class User(Base):
     #     "UserDetails", back_populates="user", foreign_keys="UserDetails.user_id"
     # )
     # sessions = relationship("Session", back_populates="user", foreign_keys="Session.user_id")
-    # jobs = relationship(
-    #     "JobDescription", back_populates="user", foreign_keys="JobDescription.user_id"
-    # )
+    jobs = relationship(
+        "JobDescription", back_populates="user", foreign_keys="JobDescription.user_id"
+    )

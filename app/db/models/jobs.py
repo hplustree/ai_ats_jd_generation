@@ -179,7 +179,7 @@ class JobDescription(Base):
     )
 
     # Relationship to the user who owns this job posting
-    # user = relationship("User", back_populates="jobs", foreign_keys=[user_id])
+    user = relationship("User", back_populates="jobs", foreign_keys=[user_id])
 
     # Optional relationship to the user record that created this job posting (may be the same as user)
     # created_by_user = relationship("User", foreign_keys=[created_by])

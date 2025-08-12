@@ -8,9 +8,11 @@ from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 import pytz
 from typing import Optional
-from app.db.models import Domain 
+from app.db.models.domain import Domain 
 from app.db.database import AsyncSessionLocal, engine
-from app.db.models import Base, JobDescription ,User
+from app.db.models.jobs import Base, JobDescription
+from app.db.models.users import  User
+
 
 from app.core.logger import logger
 
