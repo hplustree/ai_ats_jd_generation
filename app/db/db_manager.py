@@ -8,6 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 import pytz
 from typing import Optional
+from app.db.models.designation import Designation
 from app.db.models.domain import Domain 
 from app.db.database import AsyncSessionLocal, engine
 from app.db.models.jobs import Base, JobDescription
@@ -69,12 +70,11 @@ class DatabaseManager:
         external_job_id: int,
         user_id: int,
         domain_id: int, 
-        designation: str,
+        designation_id: int,
         min_exp: str,
         max_exp: str,
         availability: List[int],
         number_of_positions: int,
-        # location: str,
         qualification: str,
         technical_skills: List[str],
         work_preference: List[int],
@@ -82,7 +82,7 @@ class DatabaseManager:
         big4_experience: Optional[int],
         travel_required: Optional[int],
         software: Optional[List[str]],
-        ai_jd_description: dict
+        ai_jd_description: dict,
     ) -> int: 
         async with AsyncSessionLocal() as session:
             try:
@@ -90,7 +90,7 @@ class DatabaseManager:
                     external_job_id=external_job_id, 
                     user_id=user_id,
                     domain_id=domain_id,  
-                    designation=designation,
+                    designation_id=designation_id,
                     min_exp=min_exp,
                     max_exp=max_exp,
                     availability=json.dumps(availability),
@@ -156,3 +156,39 @@ class DatabaseManager:
                 await session.rollback()
                 logger.error(f"Error handling domain '{domain_name}': {e}", exc_info=True)
                 raise RuntimeError(f"Error handling domain: {e}") from e
+
+    async def get_or_create_designation(self, designation_name: str, domain_id: int) -> int:
+        """
+        Get designation_id by name and domain_id, or create if doesn't exist.
+        Returns the designation_id.
+        """
+        async with AsyncSessionLocal() as session:
+            try:
+                # First, try to find existing designation
+                stmt = select(Designation.id).where(
+                    Designation.name == designation_name,
+                    Designation.domain_id == domain_id
+                )
+                result = await session.execute(stmt)
+                designation_id = result.scalar()
+                
+                if designation_id:
+                    logger.debug(f"Found existing designation '{designation_name}' with id {designation_id}")
+                    return designation_id
+                
+                # Designation doesn't exist, create new one
+                new_designation = Designation(
+                    name=designation_name,
+                    domain_id=domain_id
+                )
+                session.add(new_designation)
+                await session.commit()
+                await session.refresh(new_designation)
+                
+                logger.info(f"Created new designation '{designation_name}' with id {new_designation.id}")
+                return new_designation.id
+                
+            except Exception as e:
+                await session.rollback()
+                logger.error(f"Error handling designation '{designation_name}': {e}", exc_info=True)
+                raise RuntimeError(f"Error handling designation: {e}") from e

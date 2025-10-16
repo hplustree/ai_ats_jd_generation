@@ -97,19 +97,25 @@ async def generate_job_description_endpoint(
                 # Get or create domain
                 domain_id = await db.get_or_create_domain(input_data.domain)
 
+                # Get or create designation
+                designation_id = await db.get_or_create_designation(
+                    input_data.designation,
+                    domain_id
+                )
+
                 # Convert the Pydantic model to dict for JSON storage
                 ai_jd_dict = result.model_dump()
+
 
                 job_description_id = await db.insert_job_description(
                     external_job_id=input_data.job_id,
                     user_id=input_data.user_id,
                     domain_id=domain_id,
-                    designation=input_data.designation,
+                    designation_id=designation_id, 
                     min_exp=str(input_data.min_experience),
                     max_exp=str(input_data.max_experience),
                     availability=input_data.availability,
                     number_of_positions=input_data.number_of_positions,
-                    # location=input_data.location,
                     qualification=input_data.qualification,
                     technical_skills=input_data.technical_skills,
                     work_preference=input_data.work_preference,
@@ -119,7 +125,7 @@ async def generate_job_description_endpoint(
                     software=input_data.software,
                     ai_jd_description=ai_jd_dict,
                 )
-
+                
                 # Return response for store_db=True
                 response = {
                     "job_id": job_description_id,  # auto incremented job_id
