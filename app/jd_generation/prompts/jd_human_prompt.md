@@ -16,6 +16,7 @@ Create a comprehensive, ATS-optimized job description using the following detail
 - Travel Requirement: {travel_required}
 - Technical Skills: {key_skills}
 - Software Tools: {software_tools}
+- Additional Information: {additional_info}
 
 
 ## SPECIFIC INSTRUCTIONS FOR EACH OUTPUT COMPONENT:

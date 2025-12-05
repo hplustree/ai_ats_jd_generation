@@ -6,31 +6,16 @@ AVAILABILITY_MAP = {
     2: "Part-Time",
     3: "Contractual",
     4: "Temporary",
-    5: "Seasonal"
+    5: "Seasonal",
 }
 
-WORK_PREFERENCE_MAP = {
-    1: "Remote",
-    2: "WFO",
-    3: "Hybrid"
-}
+WORK_PREFERENCE_MAP = {1: "Remote", 2: "WFO", 3: "Hybrid"}
 
-SECTOR_MAP = {
-    1: "Public",
-    2: "Private",
-    3: "Both"
-}
+SECTOR_MAP = {1: "Public", 2: "Private", 3: "Both"}
 
-BIG4_MAP = {
-    1: "Yes",
-    2: "No"
-}
+BIG4_MAP = {1: "Yes", 2: "No"}
 
-TRAVEL_REQUIRED_MAP = {
-    1: "No",
-    2: "Occasional",
-    3: "Frequent"
-}
+TRAVEL_REQUIRED_MAP = {1: "No", 2: "Occasional", 3: "Frequent"}
 
 
 def convert_experience(value: float | None) -> float | int | None:
@@ -46,9 +31,16 @@ async def format_job_input_data(data: JobDescriptionInput) -> Dict[str, Any]:
 
         key_skills = ", ".join(data.technical_skills)
         software_tools = ", ".join(data.software) if data.software else None
+        
+        # CHANGED: Join qualifications into a comma-separated string
+        qualifications = ", ".join(data.qualification)
 
-        availability_options = [AVAILABILITY_MAP.get(val, "Not provided") for val in data.availability]
-        work_preferences = [WORK_PREFERENCE_MAP.get(val, "Not provided") for val in data.work_preference]
+        availability_options = [
+            AVAILABILITY_MAP.get(val, "Not provided") for val in data.availability
+        ]
+        work_preferences = [
+            WORK_PREFERENCE_MAP.get(val, "Not provided") for val in data.work_preference
+        ]
 
         return {
             "job_id": data.job_id,
@@ -61,12 +53,15 @@ async def format_job_input_data(data: JobDescriptionInput) -> Dict[str, Any]:
             "job_location": data.location,
             "work_preference": work_preferences,
             "availability": availability_options,
-            "qualification": data.qualification,
+            "qualification": qualifications,  # CHANGED: Now formatted string
             "sector": SECTOR_MAP.get(data.sector, "Not provided"),
             "big4_experience": BIG4_MAP.get(data.big4_experience, "Not provided"),
-            "travel_required": TRAVEL_REQUIRED_MAP.get(data.travel_required, "Not provided"),
+            "travel_required": TRAVEL_REQUIRED_MAP.get(
+                data.travel_required, "Not provided"
+            ),
             "key_skills": key_skills,
-            "software_tools": software_tools
+            "software_tools": software_tools,
+            "additional_info": data.additional_info,
         }
 
     except Exception as e:

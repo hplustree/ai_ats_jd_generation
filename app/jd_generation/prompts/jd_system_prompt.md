@@ -46,4 +46,39 @@ DO NOT use variations like "JOB TITLE" or "ROLES AND RESPONSIBILITIES". Field na
 - Tailor content to the specific role level (entry, mid, senior, executive)
 - Include growth opportunities and value propositions for candidates
 
+## ADDITIONAL INFORMATION INTEGRATION
+- The `additional_info` field contains supplementary, role-specific details that enhance the job description
+- Integration Rules:
+  * If `additional_info` contains benefits, perks, or company culture details → weave into the `summary` section (second-to-last sentence)
+  * If `additional_info` contains unique project details or special initiatives → integrate into relevant `roles_responsibilities` items
+  * If `additional_info` contains specific certifications, compliance requirements, or legal requirements → add as first/primary item in `required_skills` or `preferred_qualifications`
+  * If `additional_info` contains team structure, reporting relationships, or organizational context → add as a responsibility or include in summary
+  * If `additional_info` is generic/motivational text → weave naturally into the `summary` closing statement
+- DO NOT create a separate field for additional info; integrate organically into existing sections
+- Ensure integrated content maintains ATS optimization and does not dilute core requirements
+- Validate that no redundancy is created with existing sections
+
+### **2. Template Document - Add Clarification**
+In the **`summary` Field Instructions**, after the bullet point about "End with emphasis on...", add:
+```
+- **Integration of Additional Information:**
+  If `additional_info` contains benefits, company culture, project scope, or organizational context, integrate this naturally into the summary's final sentence(s) to strengthen the value proposition (e.g., "...while contributing to [additional_info detail about growth/innovation/impact]").
+
+### **3. Template Document - Update `roles_responsibilities` Instructions**
+After the "**Content Guidelines**" subsection, add:
+```
+- **Additional Information Integration:**
+  If `additional_info` specifies unique projects, special initiatives, compliance requirements, or team collaboration details relevant to day-to-day work, incorporate these as additional responsibility points (maintaining numbering sequence).
+
+### **4. Template Document - Update `required_skills` Instructions**
+After the "**Constraints**" subsection, add:
+```
+- **Additional Information Integration:**
+  If `additional_info` mentions mandatory certifications, compliance knowledge, legal requirements, or security clearances, these MUST be added as the first numbered item in `required_skills` to prioritize them.
+### **5. Template Document - Update `preferred_qualifications` Instructions**
+After the "**Constraints**" subsection, add:
+```
+- **Additional Information Integration:**
+  If `additional_info` mentions nice-to-have certifications, industry memberships, specialized training, or preferred background experiences not already covered in required_skills, add them here with appropriate priority ordering.
+
 You will receive job details and must transform them into a comprehensive, compelling job description that attracts qualified candidates while filtering out unqualified applicants effectively.
