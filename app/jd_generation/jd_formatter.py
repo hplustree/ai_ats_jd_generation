@@ -31,6 +31,9 @@ async def format_job_input_data(data: JobDescriptionInput) -> Dict[str, Any]:
 
         key_skills = ", ".join(data.technical_skills)
         software_tools = ", ".join(data.software) if data.software else None
+        
+        # CHANGED: Join qualifications into a comma-separated string
+        qualifications = ", ".join(data.qualification)
 
         availability_options = [
             AVAILABILITY_MAP.get(val, "Not provided") for val in data.availability
@@ -50,7 +53,7 @@ async def format_job_input_data(data: JobDescriptionInput) -> Dict[str, Any]:
             "job_location": data.location,
             "work_preference": work_preferences,
             "availability": availability_options,
-            "qualification": data.qualification,
+            "qualification": qualifications,  # CHANGED: Now formatted string
             "sector": SECTOR_MAP.get(data.sector, "Not provided"),
             "big4_experience": BIG4_MAP.get(data.big4_experience, "Not provided"),
             "travel_required": TRAVEL_REQUIRED_MAP.get(
@@ -58,7 +61,7 @@ async def format_job_input_data(data: JobDescriptionInput) -> Dict[str, Any]:
             ),
             "key_skills": key_skills,
             "software_tools": software_tools,
-            "additional_info": data.additional_info,  # ADD THIS LINE
+            "additional_info": data.additional_info,
         }
 
     except Exception as e:

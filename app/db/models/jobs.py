@@ -68,7 +68,7 @@ class JobDescription(Base):
     )
 
     qualification = Column(
-        String(255), doc="Minimum required educational qualification."
+        Text, doc="List of required educational qualifications."
     )
 
     technical_skills = Column(

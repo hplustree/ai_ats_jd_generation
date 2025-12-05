@@ -26,7 +26,7 @@ class JobDescriptionInput(BaseModel):
     )
 
     availability: List[Literal[1, 2, 3, 4, 5]] = Field(
-        min_items=1,
+        min_length=1,
         description="List of job availability options: 1=Full-Time, 2=Part-Time, 3=Contractual, 4=Temporary, 5=Seasonal",
     )
 
@@ -34,16 +34,16 @@ class JobDescriptionInput(BaseModel):
 
     location: str = Field(description="Job location (e.g., Remote, Mumbai)")
 
-    qualification: str = Field(
-        min_length=1, description="Minimum educational qualification required"
+    qualification: List[str] = Field(
+        min_length=1, description="List of minimum educational qualifications required"
     )
 
     technical_skills: List[str] = Field(
-        min_items=1, description="List of required technical skills"
+        min_length=1, description="List of required technical skills"
     )
 
     work_preference: List[Literal[1, 2, 3]] = Field(
-        min_items=1,
+        min_length=1,
         description="List of preferred work modes: 1=Remote, 2=WFO, 3=Hybrid",
     )
 
@@ -96,4 +96,13 @@ class JobDescriptionInput(BaseModel):
         """Ensure technical_skills list is not empty or whitespace"""
         if not v or not all(skill.strip() for skill in v):
             raise ValueError("Technical skills must not be empty.")
+        return v
+
+    # NEW VALIDATOR for qualification
+    @field_validator("qualification")
+    @classmethod
+    def validate_qualifications(cls, v):
+        """Ensure qualifications list is not empty or whitespace"""
+        if not v or not all(qual.strip() for qual in v):
+            raise ValueError("Qualifications must not be empty.")
         return v
