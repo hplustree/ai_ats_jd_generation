@@ -1,6 +1,7 @@
 from math import fabs
 from sqlalchemy import (
     Column,
+    DateTime,
     String,
     Integer,
     TIMESTAMP,
@@ -19,6 +20,7 @@ from app.core.config import DB_JD_TABLE_NAME
 
 class JobDescription(Base):
     __tablename__ = DB_JD_TABLE_NAME
+
     # Composite primary key columns
     id = Column(
         Integer,
@@ -41,7 +43,12 @@ class JobDescription(Base):
 
     domain_id = Column(BigInteger, ForeignKey("domains.id"), index=True)
 
-    designation = Column(String(255), nullable=False, doc="Job title or designation.")
+    designation_id = Column(
+        Integer,
+        ForeignKey("designations.id"),
+        nullable=False,
+        doc="Job title or designation.",
+    )
 
     min_exp = Column(
         String(20), index=True, doc="Minimum years of experience required."
@@ -61,7 +68,7 @@ class JobDescription(Base):
     )
 
     qualification = Column(
-        String(255), doc="Minimum required educational qualification."
+        Text, doc="List of required educational qualifications."
     )
 
     technical_skills = Column(
@@ -99,6 +106,7 @@ class JobDescription(Base):
         index=True,
         doc="Employment sector: 1=Public, 2=Private, 3=Both.",
         comment="1=Public, 2=Private, 3=Both",
+        default=3,
     )
 
     big4_experience = Column(
@@ -128,40 +136,45 @@ class JobDescription(Base):
 
     status = Column(SmallInteger, index=True, comment="1=Open, 2=Closed")
 
+    # Weightages
     certification_weightage = Column(
         Float,
         nullable=False,
-        default=0.15,
+        default=0.10,
     )
 
     education_weightage = Column(
         Float,
         nullable=False,
-        default=0.15,
+        default=0.10,
     )
 
     experience_weightage = Column(
         Float,
         nullable=False,
-        default=0.30,
+        default=0.25,
+    )
+
+    roles_responsibility_weightage = Column(
+        Float,
+        nullable=False,
+        default=0.25,
+        doc="Weight for roles and responsibility matching (default: 0.25)",
     )
 
     project_weightage = Column(
         Float,
         nullable=False,
-        default=0,
+        default=0.00,
     )
 
     skill_weightage = Column(
         Float,
         nullable=False,
-        default=0.4,
+        default=0.30,
     )
-    created_by = Column(
-        Integer,
-        # ForeignKey("users.id"),
-        index=True,
-    )
+
+    is_deleted = Column(Integer, nullable=False, default=0, comment="1=True, 0=False")
 
     created_at = Column(
         TIMESTAMP,
@@ -178,16 +191,9 @@ class JobDescription(Base):
         doc="Timestamp when the record was last updated.",
     )
 
-    # Relationship to the user who owns this job posting
+    deleted_at = Column(DateTime(timezone=True), nullable=True, server_default=None)
+
+    # Relationships
     user = relationship("User", back_populates="jobs", foreign_keys=[user_id])
-
-    # Optional relationship to the user record that created this job posting (may be the same as user)
-    # created_by_user = relationship("User", foreign_keys=[created_by])
     domain = relationship("Domain", back_populates="jobs", foreign_keys=[domain_id])
-    # city = relationship("City", back_populates="jobs", foreign_keys=[job_location_city_id])
-    # state = relationship("State", back_populates="jobs", foreign_keys=[job_location_state_id])
-    # country = relationship("Country", back_populates="jobs", foreign_keys=[job_location_country_id])
-
-
-
-
+    designation = relationship("Designation", back_populates="jobs", foreign_keys=[designation_id])
