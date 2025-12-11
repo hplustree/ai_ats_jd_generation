@@ -21,7 +21,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Expose the port Uvicorn will run on
-EXPOSE 8000
+EXPOSE 9000
 
 # Command to run the ASGI app
-CMD ["python", "main.py", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "main.py", "--host", "0.0.0.0", "--port", "9000"]
