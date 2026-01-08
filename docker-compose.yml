@@ -1,0 +1,134 @@
+version: '3.9'
+
+services:
+  # Redis Service (shared by ai-ats-assessment-question-bank-generation and resume ranking)
+  redis:
+    image: redis:7-alpine
+    container_name: ai-ats-redis_prd
+    ports:
+      - "6380:6379"
+    command: redis-server --requirepass mysecret
+    volumes:
+      - redis_data:/data
+    networks:
+      - ai-ats-network-prd
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "mysecret", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # JD Generation Service
+  jd-generation:
+    build:
+      context: ./ai_ats_jd_generation
+      dockerfile: Dockerfile
+    container_name: ai-ats-jd-generation_prd
+    ports:
+      - "9000:9000"
+    env_file:
+      - ./ai_ats_jd_generation/.env
+    environment:
+      - HOST=0.0.0.0
+      - PORT=9000
+    networks:
+      - ai-ats-network-prd
+    depends_on:
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/docs"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Resume Ranking Service
+  resume-ranking:
+    build:
+      context: ./ai-ats-assessment-resume-ranking
+      dockerfile: Dockerfile
+    container_name: ai-ats-resume-ranking_prd
+    ports:
+      - "9090:9090"
+    env_file:
+      - ./ai-ats-assessment-resume-ranking/.env
+    environment:
+      - HOST=0.0.0.0
+      - PORT=9090
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=mysecret
+      - REDIS_DB=0
+    networks:
+      - ai-ats-network-prd
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090/docs"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # MCQ Generation Service
+  mcq-generation:
+    build:
+      context: ./ai-ats-assessment-question-bank-generation
+      dockerfile: Dockerfile
+    container_name: ai-ats-mcq-generation_prd
+    ports:
+      - "9001:9001"
+    env_file:
+      - ./ai-ats-assessment-question-bank-generation/.env
+    environment:
+      - HOST=0.0.0.0
+      - PORT=9001
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=mysecret
+      - REDIS_DB=0
+    networks:
+      - ai-ats-network-prd
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9001/docs"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ai-ats-assessment-interviewerral Video Interviewer Service
+  ai-ats-assessment-interviewer:
+    build:
+      context: ./ai-ats-assessment-interviewer
+      dockerfile: Dockerfile
+    container_name: ai-ats-assessment-interviewer-prd
+    ports:
+      - "9002:9002"
+    env_file:
+      - ./ai-ats-assessment-interviewer/.env
+    environment:
+      - HOST=0.0.0.0
+      - PORT=9002
+    networks:
+      - ai-ats-network-prd
+    depends_on:
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9002/docs"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  ai-ats-network-prd:
+    external: true
