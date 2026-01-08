@@ -34,8 +34,8 @@ class JobDescriptionInput(BaseModel):
 
     location: str = Field(description="Job location (e.g., Remote, Mumbai)")
 
-    qualification: List[str] = Field(
-        min_length=1, description="List of minimum educational qualifications required"
+    qualification: Optional[List[str]] = Field(
+        default=None, min_length=1, description="List of minimum educational qualifications required"
     )
 
     technical_skills: List[str] = Field(
@@ -102,7 +102,9 @@ class JobDescriptionInput(BaseModel):
     @field_validator("qualification")
     @classmethod
     def validate_qualifications(cls, v):
-        """Ensure qualifications list is not empty or whitespace"""
+        """Ensure qualifications list is not empty or whitespace if provided"""
+        if v is None:
+            return v
         if not v or not all(qual.strip() for qual in v):
             raise ValueError("Qualifications must not be empty.")
         return v
