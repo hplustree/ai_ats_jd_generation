@@ -169,8 +169,13 @@ Create a comprehensive, ATS-optimized job description using the following detail
 
 ### 7. `preferred_qualifications` Field Instructions:
 - **Rule:** Generate a numbered list of "nice-to-have" qualifications that would enhance a candidate's profile but are not strictly mandatory. These must be *directly relevant to the *`Designation`*, *`Industry/Domain`*, and *`Experience`* level*.
+- **IMPORTANT - HANDLING MISSING/EMPTY QUALIFICATIONS:**
+    - If the `Required Qualification` field is empty, None, or not provided, **do NOT create fictional educational requirements**.
+    - Instead, create 3-4 practical, experience-based preferred qualifications aligned with the `Designation`, `Industry/Domain`, and `min_experience`/`max_experience`.
+    - Focus on: relevant professional experience, industry certifications, additional technical competencies, or domain-specific knowledge that would enhance the candidate's profile.
+    - Example: Instead of adding "Bachelor's degree" when none was specified, add items like "Certification in [relevant field]," "Experience with [related tool/methodology]," "Knowledge of [industry practice]," "Proven track record in [relevant area]."
 - **Dynamic Elements to Integrate:**
-    - "Always include all relevant fields in the format: 'Bachelor's degree in [Field1], [Field2], ... or a related field.' If the `qualification` specifies a 'Master's degree' or 'PhD', output it as-is without adding any additional qualifications or preferences unless explicitly stated in the input."
+    - "If the `Required Qualification` input field is provided and not empty, always include all relevant qualifications in the format: 'Bachelor's degree in [Field1], [Field2], ... or a related field.' If the `qualification` specifies a 'Master's degree' or 'PhD', output it as-is without adding any additional qualifications or preferences unless explicitly stated in the input."
     - If the input contains only professional certifications (e.g., CA, CPA, ACCA), output them as-is, without inserting a bachelor's or master's degree unless explicitly mentioned.
 
     **Examples**:
