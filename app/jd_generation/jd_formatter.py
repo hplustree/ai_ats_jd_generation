@@ -33,7 +33,8 @@ async def format_job_input_data(data: JobDescriptionInput) -> Dict[str, Any]:
         software_tools = ", ".join(data.software) if data.software else None
         
         # CHANGED: Join qualifications into a comma-separated string, handling None case
-        qualifications = ", ".join(data.qualification) if data.qualification else None
+        # Qualifications can be None (not provided), empty list, or contain values
+        qualifications = ", ".join(data.qualification) if data.qualification and len(data.qualification) > 0 else None
 
         availability_options = [
             AVAILABILITY_MAP.get(val, "Not provided") for val in data.availability
