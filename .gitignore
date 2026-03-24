@@ -4,3 +4,4 @@ myenv
 logs
 .venv
 *.bak
+docker-compose.yml
