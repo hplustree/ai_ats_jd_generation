@@ -11,6 +11,7 @@ WORKDIR /app
 # -------- System Dependencies --------
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+     curl \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
