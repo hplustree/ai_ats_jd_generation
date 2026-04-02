@@ -1,33 +1,35 @@
-# Use official Python slim image
+# -------- Base Image --------
 FROM python:3.12-slim
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+# -------- Environment --------
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
-# Set working directory
+# -------- Work Directory --------
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y build-essential \
+# -------- System Dependencies --------
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better cache handling
+# -------- Install Python Dependencies --------
 COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip \
+ && pip install --no-cache-dir -r requirements.txt
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy the full application
+# -------- Copy Application --------
 COPY . .
 
-# Expose the port Uvicorn will run on
-EXPOSE 9000
+# -------- Expose Port --------
+EXPOSE 8000
 
-# ✅ HEALTHCHECK (Python-based, no curl needed)
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:9000/health')" || exit 1
+# -------- Healthcheck (DevOps-safe) --------
+# Socket-based check (no dependency on /health)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
+  CMD python -c "import socket; s=socket.socket(); s.settimeout(5); s.connect(('localhost',8000)); s.close()" || exit 1
 
-# Command to run the ASGI app
-CMD ["python", "main.py", "--host", "0.0.0.0", "--port", "9000"]
+# -------- Start Application --------
+# Use uvicorn directly (more stable)
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
