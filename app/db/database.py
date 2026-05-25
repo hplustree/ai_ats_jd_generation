@@ -6,12 +6,12 @@ from app.core.config import DB_USER, DB_PASSWORD, DB_HOST, DB_NAME
 
 encoded_password = quote_plus(DB_PASSWORD)
 
-DATABASE_URL = f"mysql+aiomysql://{DB_USER}:{encoded_password}@{DB_HOST}/{DB_NAME}"
+DATABASE_URL = f"mysql+aiomysql://{DB_USER}:{encoded_password}@{DB_HOST}/{DB_NAME}?charset=utf8mb4"
 
 engine = create_async_engine(
     DATABASE_URL,
     echo=False,
-    pool_pre_ping=True
+    pool_pre_ping=False
 )
 
 AsyncSessionLocal = sessionmaker(
